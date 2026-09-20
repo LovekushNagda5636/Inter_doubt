@@ -35,6 +35,14 @@ const PROVIDERS = {
     defaultModel: "gemini-2.5-flash",
     modelSuggestions: ["gemini-2.5-flash", "gemini-2.5-pro", "gemini-2.0-flash"],
   },
+  groq: {
+    label: "Groq",
+    keyLabel: "Groq API key",
+    keyPlaceholder: "gsk_...",
+    keyHint: "Get a key at console.groq.com/keys. Not to be confused with xAI's Grok.",
+    defaultModel: "llama-3.3-70b-versatile",
+    modelSuggestions: ["llama-3.3-70b-versatile", "llama-3.1-8b-instant", "gemma2-9b-it"],
+  },
 };
 
 const DEFAULT_PROVIDER = "anthropic";
@@ -139,6 +147,15 @@ async function callProvider(provider, apiKey, model, systemPrompt, history) {
       );
     case "gemini":
       return callGemini(apiKey, model, systemPrompt, history);
+    case "groq":
+      return callOpenAiCompatible(
+        "https://api.groq.com/openai/v1/chat/completions",
+        apiKey,
+        model,
+        PROVIDERS.groq.defaultModel,
+        systemPrompt,
+        history
+      );
     case "anthropic":
     default:
       return callAnthropic(apiKey, model, systemPrompt, history);
