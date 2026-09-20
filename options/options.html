@@ -60,8 +60,12 @@
   <p class="hint" id="apiKeyHint"></p>
 
   <label for="model">Model</label>
-  <input id="model" list="modelSuggestions" autocomplete="off" />
+  <div style="display: flex; gap: 8px; align-items: center;">
+    <input id="model" list="modelSuggestions" autocomplete="off" style="margin-top: 0; flex-grow: 1;" />
+    <button id="fetchModelsBtn" type="button" style="margin-top: 0; white-space: nowrap; background: #e2e8f0; color: #1e293b;">Fetch models</button>
+  </div>
   <datalist id="modelSuggestions"></datalist>
+  <p class="hint" id="modelHint">Suggestions shown are examples — providers change these over time. Enter your API key above, then click "Fetch models" to pull the live list for your account.</p>
 
   <button id="save">Save</button>
   <div id="status"></div>
