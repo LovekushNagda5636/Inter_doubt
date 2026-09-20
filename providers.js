@@ -40,8 +40,11 @@ const PROVIDERS = {
     keyLabel: "Groq API key",
     keyPlaceholder: "gsk_...",
     keyHint: "Get a key at console.groq.com/keys. Not to be confused with xAI's Grok.",
-    defaultModel: "llama-3.3-70b-versatile",
-    modelSuggestions: ["llama-3.3-70b-versatile", "llama-3.1-8b-instant", "gemma2-9b-it"],
+    defaultModel: "openai/gpt-oss-20b",
+    // Groq's free-tier catalog changes over time (older Llama models have been
+    // moved to enterprise-only) -- use "Fetch models" in Settings to pull the
+    // live list for your account instead of relying on these as gospel.
+    modelSuggestions: ["openai/gpt-oss-20b", "openai/gpt-oss-120b", "qwen/qwen3.8-27b"],
   },
 };
 
@@ -123,6 +126,64 @@ async function callGemini(apiKey, model, systemPrompt, history) {
   const data = await res.json();
   const parts = data.candidates?.[0]?.content?.parts || [];
   return parts.map((p) => p.text || "").join("").trim() || "(no response)";
+}
+
+async function listModelsAnthropic(apiKey) {
+  const res = await fetch("https://api.anthropic.com/v1/models?limit=1000", {
+    headers: {
+      "x-api-key": apiKey,
+      "anthropic-version": "2023-06-01",
+      "anthropic-dangerous-direct-browser-access": "true",
+    },
+  });
+  if (!res.ok) throw new Error(await readErrorBody(res));
+  const data = await res.json();
+  return (data.data || []).map((m) => m.id);
+}
+
+async function listModelsOpenAiCompatible(baseUrl, apiKey) {
+  const res = await fetch(`${baseUrl}/models`, {
+    headers: { authorization: `Bearer ${apiKey}` },
+  });
+  if (!res.ok) throw new Error(await readErrorBody(res));
+  const data = await res.json();
+  return (data.data || []).map((m) => m.id);
+}
+
+async function listModelsGemini(apiKey) {
+  const res = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(apiKey)}&pageSize=1000`
+  );
+  if (!res.ok) throw new Error(await readErrorBody(res));
+  const data = await res.json();
+  return (data.models || [])
+    .filter((m) => (m.supportedGenerationMethods || []).includes("generateContent"))
+    .map((m) => m.name.replace(/^models\//, ""));
+}
+
+// Pulls the live model list for an account, so Settings doesn't have to rely
+// on hardcoded model ids that providers deprecate without notice.
+async function listModels(provider, apiKey) {
+  let ids;
+  switch (provider) {
+    case "openai":
+      ids = await listModelsOpenAiCompatible("https://api.openai.com/v1", apiKey);
+      break;
+    case "xai":
+      ids = await listModelsOpenAiCompatible("https://api.x.ai/v1", apiKey);
+      break;
+    case "groq":
+      ids = await listModelsOpenAiCompatible("https://api.groq.com/openai/v1", apiKey);
+      break;
+    case "gemini":
+      ids = await listModelsGemini(apiKey);
+      break;
+    case "anthropic":
+    default:
+      ids = await listModelsAnthropic(apiKey);
+      break;
+  }
+  return [...new Set(ids)].sort();
 }
 
 async function callProvider(provider, apiKey, model, systemPrompt, history) {

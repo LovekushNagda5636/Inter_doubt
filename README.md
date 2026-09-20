@@ -42,7 +42,11 @@ just closes it.
    - xAI: [console.x.ai](https://console.x.ai)
    - Gemini: [aistudio.google.com/apikey](https://aistudio.google.com/apikey)
    - Groq: [console.groq.com/keys](https://console.groq.com/keys)
-5. Open a chat on claude.ai, click the extension icon to open the side
+5. Providers deprecate model ids over time (e.g. Groq moved
+   `llama-3.3-70b-versatile` to enterprise-only in mid-2026), so after
+   entering your key click **Fetch models** to pull the live, valid list
+   for your account instead of trusting the hardcoded suggestions.
+6. Open a chat on claude.ai, click the extension icon to open the side
    panel, and start asking doubts.
 
 ## Notes / limitations
