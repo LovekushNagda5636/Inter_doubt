@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Side agent</title>
+<link rel="stylesheet" href="sidepanel.css" />
+</head>
+<body>
+  <header>
+    <div class="title">
+      <span class="dot"></span>
+      Side agent
+    </div>
+    <button id="settingsBtn" title="Settings">⚙️</button>
+  </header>
+
+  <div id="contextBar">
+    <span id="contextLabel">No context captured yet</span>
+    <button id="refreshBtn" title="Re-capture context from the page">Refresh</button>
+  </div>
+
+  <div id="setupNotice" class="hidden">
+    Add your Anthropic API key in <a href="#" id="openSettings">Settings</a> to start asking doubts.
+  </div>
+
+  <main id="messages"></main>
+
+  <form id="composer">
+    <textarea id="input" placeholder="Ask a doubt about what's on screen..." rows="2"></textarea>
+    <button id="sendBtn" type="submit">Ask</button>
+  </form>
+
+  <p class="footnote">Your main chat isn't touched. Close this panel any time — you'll be right where you left it.</p>
+
+  <script src="sidepanel.js"></script>
+</body>
+</html>
