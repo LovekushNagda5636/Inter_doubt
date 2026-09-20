@@ -2,46 +2,37 @@ const providerSelect = document.getElementById("provider");
 const apiKeyInput = document.getElementById("apiKey");
 const apiKeyLabel = document.getElementById("apiKeyLabel");
 const apiKeyHint = document.getElementById("apiKeyHint");
-const modelSelect = document.getElementById("model");
+const modelInput = document.getElementById("model");
+const modelSuggestions = document.getElementById("modelSuggestions");
 const status = document.getElementById("status");
 
-const PROVIDERS = {
-  anthropic: {
-    label: "Anthropic API key",
-    hint: "Get a key at console.anthropic.com.",
-    placeholder: "sk-ant-...",
-    models: ["claude-sonnet-5", "claude-opus-5", "claude-haiku-4-5-20251001"],
-  },
-  xai: {
-    label: "xAI API key",
-    hint: "Get a key at console.x.ai.",
-    placeholder: "xai-...",
-    models: ["grok-4", "grok-4-fast", "grok-3"],
-  },
-};
+Object.entries(PROVIDERS).forEach(([id, cfg]) => {
+  const opt = document.createElement("option");
+  opt.value = id;
+  opt.textContent = cfg.label;
+  providerSelect.appendChild(opt);
+});
 
-function applyProvider(provider, selectedModel) {
-  const cfg = PROVIDERS[provider] || PROVIDERS.anthropic;
-  apiKeyLabel.textContent = cfg.label;
-  apiKeyHint.textContent = cfg.hint;
-  apiKeyInput.placeholder = cfg.placeholder;
+function applyProvider(providerId, savedModel) {
+  const cfg = PROVIDERS[providerId] || PROVIDERS[DEFAULT_PROVIDER];
+  apiKeyLabel.textContent = cfg.keyLabel;
+  apiKeyHint.textContent = cfg.keyHint;
+  apiKeyInput.placeholder = cfg.keyPlaceholder;
 
-  modelSelect.innerHTML = "";
-  cfg.models.forEach((m) => {
+  modelSuggestions.innerHTML = "";
+  cfg.modelSuggestions.forEach((m) => {
     const opt = document.createElement("option");
     opt.value = m;
-    opt.textContent = m;
-    modelSelect.appendChild(opt);
+    modelSuggestions.appendChild(opt);
   });
-  if (selectedModel && cfg.models.includes(selectedModel)) {
-    modelSelect.value = selectedModel;
-  }
+
+  modelInput.value = savedModel || cfg.defaultModel;
 }
 
 chrome.storage.local.get(["provider", "apiKey", "model"], (data) => {
-  const provider = data.provider || "anthropic";
-  providerSelect.value = provider;
-  applyProvider(provider, data.model);
+  const providerId = PROVIDERS[data.provider] ? data.provider : DEFAULT_PROVIDER;
+  providerSelect.value = providerId;
+  applyProvider(providerId, data.provider === providerId ? data.model : null);
   if (data.apiKey) apiKeyInput.value = data.apiKey;
 });
 
@@ -53,7 +44,7 @@ providerSelect.addEventListener("change", () => {
 document.getElementById("save").addEventListener("click", () => {
   const provider = providerSelect.value;
   const apiKey = apiKeyInput.value.trim();
-  const model = modelSelect.value;
+  const model = modelInput.value.trim();
   chrome.storage.local.set({ provider, apiKey, model }, () => {
     status.textContent = "Saved.";
     setTimeout(() => (status.textContent = ""), 2000);
