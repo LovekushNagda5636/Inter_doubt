@@ -35,7 +35,8 @@
     "https://claude.ai/*",
     "https://chatgpt.com/*",
     "https://gemini.google.com/*",
-    "https://api.anthropic.com/*"
+    "https://api.anthropic.com/*",
+    "https://api.x.ai/*"
   ],
   "content_scripts": [
     {

@@ -98,8 +98,67 @@ function buildSystemPrompt() {
   ].join("\n");
 }
 
+async function callAnthropic(apiKey, model, systemPrompt) {
+  const res = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "x-api-key": apiKey,
+      "anthropic-version": "2023-06-01",
+      "anthropic-dangerous-direct-browser-access": "true",
+    },
+    body: JSON.stringify({
+      model: model || "claude-sonnet-5",
+      max_tokens: 1024,
+      system: systemPrompt,
+      messages: history,
+    }),
+  });
+
+  if (!res.ok) {
+    const errBody = await res.text();
+    throw new Error(`API error ${res.status}: ${errBody.slice(0, 300)}`);
+  }
+
+  const data = await res.json();
+  return (
+    (data.content || [])
+      .filter((b) => b.type === "text")
+      .map((b) => b.text)
+      .join("\n")
+      .trim() || "(no response)"
+  );
+}
+
+async function callXai(apiKey, model, systemPrompt) {
+  // xAI's Grok API is OpenAI-compatible: chat/completions with a system message.
+  const res = await fetch("https://api.x.ai/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      authorization: `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      model: model || "grok-4",
+      messages: [{ role: "system", content: systemPrompt }, ...history],
+    }),
+  });
+
+  if (!res.ok) {
+    const errBody = await res.text();
+    throw new Error(`API error ${res.status}: ${errBody.slice(0, 300)}`);
+  }
+
+  const data = await res.json();
+  return data.choices?.[0]?.message?.content?.trim() || "(no response)";
+}
+
 async function sendDoubt(text) {
-  const { apiKey, model } = await chrome.storage.local.get(["apiKey", "model"]);
+  const { apiKey, model, provider } = await chrome.storage.local.get([
+    "apiKey",
+    "model",
+    "provider",
+  ]);
   if (!apiKey) {
     setupNotice.classList.remove("hidden");
     return;
@@ -113,33 +172,11 @@ async function sendDoubt(text) {
   sendBtn.disabled = true;
 
   try {
-    const res = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
-        "x-api-key": apiKey,
-        "anthropic-version": "2023-06-01",
-        "anthropic-dangerous-direct-browser-access": "true",
-      },
-      body: JSON.stringify({
-        model: model || "claude-sonnet-5",
-        max_tokens: 1024,
-        system: buildSystemPrompt(),
-        messages: history,
-      }),
-    });
-
-    if (!res.ok) {
-      const errBody = await res.text();
-      throw new Error(`API error ${res.status}: ${errBody.slice(0, 300)}`);
-    }
-
-    const data = await res.json();
-    const answer = (data.content || [])
-      .filter((b) => b.type === "text")
-      .map((b) => b.text)
-      .join("\n")
-      .trim() || "(no response)";
+    const systemPrompt = buildSystemPrompt();
+    const answer =
+      provider === "xai"
+        ? await callXai(apiKey, model, systemPrompt)
+        : await callAnthropic(apiKey, model, systemPrompt);
 
     thinking.textContent = answer;
     history.push({ role: "assistant", content: answer });
