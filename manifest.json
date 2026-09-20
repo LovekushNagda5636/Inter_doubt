@@ -36,7 +36,9 @@
     "https://chatgpt.com/*",
     "https://gemini.google.com/*",
     "https://api.anthropic.com/*",
-    "https://api.x.ai/*"
+    "https://api.x.ai/*",
+    "https://api.openai.com/*",
+    "https://generativelanguage.googleapis.com/*"
   ],
   "content_scripts": [
     {

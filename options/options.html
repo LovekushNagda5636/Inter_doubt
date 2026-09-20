@@ -53,21 +53,20 @@
   </p>
 
   <label for="provider">Provider</label>
-  <select id="provider">
-    <option value="anthropic">Anthropic (Claude)</option>
-    <option value="xai">xAI (Grok)</option>
-  </select>
+  <select id="provider"></select>
 
-  <label id="apiKeyLabel" for="apiKey">Anthropic API key</label>
-  <input id="apiKey" type="password" placeholder="sk-ant-..." autocomplete="off" />
-  <p class="hint" id="apiKeyHint">Get a key at console.anthropic.com.</p>
+  <label id="apiKeyLabel" for="apiKey">API key</label>
+  <input id="apiKey" type="password" placeholder="" autocomplete="off" />
+  <p class="hint" id="apiKeyHint"></p>
 
   <label for="model">Model</label>
-  <select id="model"></select>
+  <input id="model" list="modelSuggestions" autocomplete="off" />
+  <datalist id="modelSuggestions"></datalist>
 
   <button id="save">Save</button>
   <div id="status"></div>
 
+  <script src="../providers.js"></script>
   <script src="options.js"></script>
 </body>
 </html>
